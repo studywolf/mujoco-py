@@ -41,6 +41,8 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         glfw.set_scroll_callback(self.window, self._scroll_callback)
         glfw.set_key_callback(self.window, self.key_callback)
 
+        self.exit = False
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -49,7 +51,8 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         if self.window is None:
             return
         elif glfw.window_should_close(self.window):
-            exit(0)
+            # exit(0)
+            self.exit = True
 
         with self._gui_lock:
             super().render()
@@ -60,7 +63,8 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         if action == glfw.RELEASE and key == glfw.KEY_ESCAPE:
             print("Pressed ESC")
             print("Quitting.")
-            exit(0)
+            # exit(0)
+            self.exit = True
 
     def _cursor_pos_callback(self, window, xpos, ypos):
         if not (self._button_left_pressed or self._button_right_pressed):
@@ -364,7 +368,19 @@ class MjViewer(MjViewerBasic):
                                     geom_idx, 3] = self.sim.extras[geom_idx]
         elif key in (glfw.KEY_0, glfw.KEY_1, glfw.KEY_2, glfw.KEY_3, glfw.KEY_4):
             self.vopt.geomgroup[key - glfw.KEY_0] ^= 1
+        elif glfw.get_key(window, glfw.KEY_LEFT_CONTROL) and 290 <= key <= 301:
+            # index into the last 12 elements of mjtVisFrame
+            keynum = min(key - 290 + 12, 21)
+            vopt = self.vopt
+            vopt.flags[keynum] = vopt.flags[keynum] = not vopt.flags[keynum]
+        elif 290 <= key <= 301:
+            # index into the first 12 elements of mjtVisFrame
+            keynum = key - 290
+            vopt = self.vopt
+            vopt.flags[keynum] = vopt.flags[keynum] = not vopt.flags[keynum]
         super().key_callback(window, key, scancode, action, mods)
+
+        print(glfw.get_key(window, glfw.KEY_LEFT_CONTROL))
 
 # Separate Process to save video. This way visualization is
 # less slowed down.
