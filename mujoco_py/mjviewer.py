@@ -51,7 +51,6 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         if self.window is None:
             return
         elif glfw.window_should_close(self.window):
-            # exit(0)
             self.exit = True
 
         with self._gui_lock:
@@ -63,7 +62,6 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         if action == glfw.RELEASE and key == glfw.KEY_ESCAPE:
             print("Pressed ESC")
             print("Quitting.")
-            # exit(0)
             self.exit = True
 
     def _cursor_pos_callback(self, window, xpos, ypos):
@@ -138,6 +136,7 @@ class MjViewer(MjViewerBasic):
 
         self._ncam = sim.model.ncam
         self._paused = False  # is viewer paused.
+
         # should we advance viewer just by one step.
         self._advance_by_one_step = False
 
@@ -164,6 +163,17 @@ class MjViewer(MjViewerBasic):
         self._time_per_render = 1 / 60.0
         self._hide_overlay = False  # hide the entire overlay.
         self._user_overlay = {}
+
+        # these variables are for changing the x,y,z location of an object
+        # either 0 (no press), or +/-1 are returned, the scaling is up to the
+        # user end
+        self.target_x = 0
+        self.target_y = 0
+        self.target_z = 0
+
+        # let the user define what the robot should do, pick up object, drop it
+        # off, or reach to a target
+        self.reach_mode = 'reach_target'
 
     def render(self):
         """
@@ -297,6 +307,17 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_BOTTOMRIGHT, "n_substeps", str(self.sim.nsubsteps))
         self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
 
+        # CUSTOM KEYS
+        self.add_overlay(const.GRID_TOPLEFT, "Move target - X", "[o]")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target + X", "[p]")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target - Y", "[l]")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target + Y", "[;]")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target - Z", "[.]")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target + Z", "[/]")
+        self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[a]")
+        self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[z]")
+        self.add_overlay(const.GRID_TOPLEFT, "Drop off up object", "[x]")
+
     def key_callback(self, window, key, scancode, action, mods):
         if action != glfw.RELEASE:
             return
@@ -343,9 +364,11 @@ class MjViewer(MjViewerBasic):
             vopt.flags[10] = vopt.flags[11] = not vopt.flags[10]
         elif key == glfw.KEY_D:  # turn off / turn on rendering every frame.
             self._render_every_frame = not self._render_every_frame
+
         elif key == glfw.KEY_E:
             vopt = self.vopt
             vopt.frame = 1 - vopt.frame
+
         elif key == glfw.KEY_R:  # makes everything little bit transparent.
             self._transparent = not self._transparent
             if self._transparent:
@@ -378,9 +401,33 @@ class MjViewer(MjViewerBasic):
             keynum = key - 290
             vopt = self.vopt
             vopt.flags[keynum] = vopt.flags[keynum] = not vopt.flags[keynum]
-        super().key_callback(window, key, scancode, action, mods)
+        # adjust object location up / down
+        # X
+        elif key == glfw.KEY_O:
+            self.target_x = -1
+        elif key == glfw.KEY_P:
+            self.target_x = 1
+        # Y
+        elif key == glfw.KEY_L:
+            self.target_y = -1
+        elif key == glfw.KEY_SEMICOLON:
+            self.target_y = 1
+        # Z
+        elif key == glfw.KEY_PERIOD:
+            self.target_z = -1
+        elif key == glfw.KEY_SLASH:
+            self.target_z = 1
 
-        print(glfw.get_key(window, glfw.KEY_LEFT_CONTROL))
+        # user command to reach to target
+        elif key == glfw.KEY_A:
+            self.reach_mode = 'reach_target'
+        # user command to pick up object
+        elif key == glfw.KEY_Z:
+            self.reach_mode = 'pick_up'
+        # user command to drop off object
+        elif key == glfw.KEY_X:
+            self.reach_mode = 'drop_off'
+        super().key_callback(window, key, scancode, action, mods)
 
 # Separate Process to save video. This way visualization is
 # less slowed down.
