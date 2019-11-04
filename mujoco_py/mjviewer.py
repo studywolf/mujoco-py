@@ -175,6 +175,13 @@ class MjViewer(MjViewerBasic):
         # off, or reach to a target
         self.reach_mode = 'reach_target'
 
+
+        # visualization of position and orientation of path planner / filter
+        self.path_vis = False
+
+        # allow for printing to top right from user side
+        self.custom_print = ""
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -317,6 +324,9 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[a]")
         self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[z]")
         self.add_overlay(const.GRID_TOPLEFT, "Drop off up object", "[x]")
+        self.add_overlay(const.GRID_TOPLEFT, "Toggle path vis", "[w]")
+        self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
+        self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
 
     def key_callback(self, window, key, scancode, action, mods):
         if action != glfw.RELEASE:
@@ -427,6 +437,8 @@ class MjViewer(MjViewerBasic):
         # user command to drop off object
         elif key == glfw.KEY_X:
             self.reach_mode = 'drop_off'
+        elif key == glfw.KEY_W:
+            self.path_vis = not self.path_vis
         super().key_callback(window, key, scancode, action, mods)
 
 # Separate Process to save video. This way visualization is
