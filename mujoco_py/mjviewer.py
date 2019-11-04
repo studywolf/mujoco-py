@@ -182,6 +182,9 @@ class MjViewer(MjViewerBasic):
         # allow for printing to top right from user side
         self.custom_print = ""
 
+        # toggle for adaptation
+        self.adapt = False
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -315,6 +318,7 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
 
         # CUSTOM KEYS
+        self.add_overlay(const.GRID_TOPLEFT, "Toggle adaptation", "[LEFT SHIFT]")
         self.add_overlay(const.GRID_TOPLEFT, "Move target - X", "[o]")
         self.add_overlay(const.GRID_TOPLEFT, "Move target + X", "[p]")
         self.add_overlay(const.GRID_TOPLEFT, "Move target - Y", "[l]")
@@ -325,6 +329,7 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[z]")
         self.add_overlay(const.GRID_TOPLEFT, "Drop off up object", "[x]")
         self.add_overlay(const.GRID_TOPLEFT, "Toggle path vis", "[w]")
+        self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
 
@@ -442,6 +447,10 @@ class MjViewer(MjViewerBasic):
             self.reach_mode = 'drop_off'
         elif key == glfw.KEY_W:
             self.path_vis = not self.path_vis
+
+        # toggle adaptation
+        elif key ==glfw.KEY_LEFT_SHIFT:
+            self.adapt = not self.adapt
         super().key_callback(window, key, scancode, action, mods)
 
 # Separate Process to save video. This way visualization is
