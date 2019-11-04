@@ -362,9 +362,12 @@ class MjViewer(MjViewerBasic):
             imageio.imwrite(self._image_path % self._image_idx, img)
             self._image_idx += 1
         elif key == glfw.KEY_I:  # drops in debugger.
-            print('You can access the simulator by self.sim')
-            import ipdb
-            ipdb.set_trace()
+            try:
+                import ipdb
+                ipdb.set_trace()
+                print('You can access the simulator by self.sim')
+            except ImportError:
+                print('pip install ipdb to use debugger')
         elif key == glfw.KEY_S:  # Slows down simulation.
             self._run_speed /= 2.0
         elif key == glfw.KEY_F:  # Speeds up simulation.
