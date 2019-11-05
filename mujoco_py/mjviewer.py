@@ -175,7 +175,6 @@ class MjViewer(MjViewerBasic):
         # off, or reach to a target
         self.reach_mode = 'reach_target'
 
-
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
 
@@ -184,6 +183,9 @@ class MjViewer(MjViewerBasic):
 
         # toggle for adaptation
         self.adapt = False
+
+        # manual toggle of gripper status
+        self.gripper = 1
 
     def render(self):
         """
@@ -449,8 +451,14 @@ class MjViewer(MjViewerBasic):
             self.path_vis = not self.path_vis
 
         # toggle adaptation
-        elif key ==glfw.KEY_LEFT_SHIFT:
+        elif key == glfw.KEY_LEFT_SHIFT:
             self.adapt = not self.adapt
+
+        # TODO: comment this out for demo
+        # toggle gripper
+        elif key == glfw.KEY_N:
+            self.gripper *= -1
+
         super().key_callback(window, key, scancode, action, mods)
 
 # Separate Process to save video. This way visualization is
