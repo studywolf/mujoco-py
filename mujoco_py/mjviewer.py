@@ -131,7 +131,7 @@ class MjViewer(MjViewerBasic):
         The simulator to display.
     """
 
-    def __init__(self, sim):
+    def __init__(self, sim, display_all_text=False):
         super().__init__(sim)
 
         self._ncam = sim.model.ncam
@@ -186,6 +186,12 @@ class MjViewer(MjViewerBasic):
 
         # manual toggle of gripper status
         self.gripper = 1
+
+        # display mujoco default text
+        self.display_all_text = display_all_text
+
+        # scaling factor on external force to apply to body
+        self.external_force = 0
 
     def render(self):
         """
@@ -264,60 +270,61 @@ class MjViewer(MjViewerBasic):
         return img
 
     def _create_full_overlay(self):
-        if self._render_every_frame:
-            self.add_overlay(const.GRID_TOPLEFT, "", "")
-        else:
-            self.add_overlay(const.GRID_TOPLEFT, "Run speed = %.3f x real time" %
-                             self._run_speed, "[S]lower, [F]aster")
-        self.add_overlay(
-            const.GRID_TOPLEFT, "Ren[d]er every frame", "Off" if self._render_every_frame else "On")
-        self.add_overlay(const.GRID_TOPLEFT, "Switch camera (#cams = %d)" % (self._ncam + 1),
-                                             "[Tab] (camera ID = %d)" % self.cam.fixedcamid)
-        self.add_overlay(const.GRID_TOPLEFT, "[C]ontact forces", "Off" if self.vopt.flags[
-                         10] == 1 else "On")
-        self.add_overlay(
-            const.GRID_TOPLEFT, "Referenc[e] frames", "Off" if self.vopt.frame == 1 else "On")
-        self.add_overlay(const.GRID_TOPLEFT,
-                         "T[r]ansparent", "On" if self._transparent else "Off")
-        self.add_overlay(
-            const.GRID_TOPLEFT, "Display [M]ocap bodies", "On" if self._show_mocap else "Off")
-        if self._paused is not None:
-            if not self._paused:
-                self.add_overlay(const.GRID_TOPLEFT, "Stop", "[Space]")
+        if self.display_all_text:
+            if self._render_every_frame:
+                self.add_overlay(const.GRID_TOPLEFT, "", "")
             else:
-                self.add_overlay(const.GRID_TOPLEFT, "Start", "[Space]")
+                self.add_overlay(const.GRID_TOPLEFT, "Run speed = %.3f x real time" %
+                                self._run_speed, "[S]lower, [F]aster")
+            self.add_overlay(
+                const.GRID_TOPLEFT, "Ren[d]er every frame", "Off" if self._render_every_frame else "On")
+            self.add_overlay(const.GRID_TOPLEFT, "Switch camera (#cams = %d)" % (self._ncam + 1),
+                                                "[Tab] (camera ID = %d)" % self.cam.fixedcamid)
+            self.add_overlay(const.GRID_TOPLEFT, "[C]ontact forces", "Off" if self.vopt.flags[
+                            10] == 1 else "On")
+            self.add_overlay(
+                const.GRID_TOPLEFT, "Referenc[e] frames", "Off" if self.vopt.frame == 1 else "On")
             self.add_overlay(const.GRID_TOPLEFT,
-                             "Advance simulation by one step", "[right arrow]")
-        self.add_overlay(const.GRID_TOPLEFT, "[H]ide Menu", "")
-        if self._record_video:
-            ndots = int(7 * (time.time() % 1))
-            dots = ("." * ndots) + (" " * (6 - ndots))
-            self.add_overlay(const.GRID_TOPLEFT,
-                             "Record [V]ideo (On) " + dots, "")
-        else:
-            self.add_overlay(const.GRID_TOPLEFT, "Record [V]ideo (Off) ", "")
-        if self._video_idx > 0:
-            fname = self._video_path % (self._video_idx - 1)
-            self.add_overlay(const.GRID_TOPLEFT, "   saved as %s" % fname, "")
+                            "T[r]ansparent", "On" if self._transparent else "Off")
+            self.add_overlay(
+                const.GRID_TOPLEFT, "Display [M]ocap bodies", "On" if self._show_mocap else "Off")
+            if self._paused is not None:
+                if not self._paused:
+                    self.add_overlay(const.GRID_TOPLEFT, "Stop", "[Space]")
+                else:
+                    self.add_overlay(const.GRID_TOPLEFT, "Start", "[Space]")
+                self.add_overlay(const.GRID_TOPLEFT,
+                                "Advance simulation by one step", "[right arrow]")
+            self.add_overlay(const.GRID_TOPLEFT, "[H]ide Menu", "")
+            if self._record_video:
+                ndots = int(7 * (time.time() % 1))
+                dots = ("." * ndots) + (" " * (6 - ndots))
+                self.add_overlay(const.GRID_TOPLEFT,
+                                "Record [V]ideo (On) " + dots, "")
+            else:
+                self.add_overlay(const.GRID_TOPLEFT, "Record [V]ideo (Off) ", "")
+            if self._video_idx > 0:
+                fname = self._video_path % (self._video_idx - 1)
+                self.add_overlay(const.GRID_TOPLEFT, "   saved as %s" % fname, "")
 
-        self.add_overlay(const.GRID_TOPLEFT, "Cap[t]ure frame", "")
-        if self._image_idx > 0:
-            fname = self._image_path % (self._image_idx - 1)
-            self.add_overlay(const.GRID_TOPLEFT, "   saved as %s" % fname, "")
-        self.add_overlay(const.GRID_TOPLEFT, "Start [i]pdb", "")
-        if self._record_video:
-            extra = " (while video is not recorded)"
-        else:
-            extra = ""
-        self.add_overlay(const.GRID_BOTTOMLEFT, "FPS", "%d%s" %
-                         (1 / self._time_per_render, extra))
-        self.add_overlay(const.GRID_BOTTOMLEFT, "Solver iterations", str(
-            self.sim.data.solver_iter + 1))
-        step = round(self.sim.data.time / self.sim.model.opt.timestep)
-        self.add_overlay(const.GRID_BOTTOMRIGHT, "Step", str(step))
-        self.add_overlay(const.GRID_BOTTOMRIGHT, "timestep", "%.5f" % self.sim.model.opt.timestep)
-        self.add_overlay(const.GRID_BOTTOMRIGHT, "n_substeps", str(self.sim.nsubsteps))
-        self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
+            self.add_overlay(const.GRID_TOPLEFT, "Cap[t]ure frame", "")
+            if self._image_idx > 0:
+                fname = self._image_path % (self._image_idx - 1)
+                self.add_overlay(const.GRID_TOPLEFT, "   saved as %s" % fname, "")
+            self.add_overlay(const.GRID_TOPLEFT, "Start [i]pdb", "")
+            if self._record_video:
+                extra = " (while video is not recorded)"
+            else:
+                extra = ""
+            self.add_overlay(const.GRID_BOTTOMLEFT, "FPS", "%d%s" %
+                            (1 / self._time_per_render, extra))
+            self.add_overlay(const.GRID_BOTTOMLEFT, "Solver iterations", str(
+                self.sim.data.solver_iter + 1))
+            step = round(self.sim.data.time / self.sim.model.opt.timestep)
+            self.add_overlay(const.GRID_BOTTOMRIGHT, "Step", str(step))
+            self.add_overlay(const.GRID_BOTTOMRIGHT, "timestep", "%.5f" % self.sim.model.opt.timestep)
+            self.add_overlay(const.GRID_BOTTOMRIGHT, "n_substeps", str(self.sim.nsubsteps))
+            self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
 
         # CUSTOM KEYS
         self.add_overlay(const.GRID_TOPLEFT, "Toggle adaptation", "[LEFT SHIFT]")
@@ -331,9 +338,12 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[z]")
         self.add_overlay(const.GRID_TOPLEFT, "Drop off up object", "[x]")
         self.add_overlay(const.GRID_TOPLEFT, "Toggle path vis", "[w]")
+        self.add_overlay(const.GRID_TOPLEFT, "Increase gravity", "[g]")
+        self.add_overlay(const.GRID_TOPLEFT, "Decrease gravity", "[b]")
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
+        self.add_overlay(const.GRID_TOPRIGHT, "Gravity Scaling: %i" % self.external_force, "")
 
     def key_callback(self, window, key, scancode, action, mods):
         if action != glfw.RELEASE:
@@ -458,6 +468,13 @@ class MjViewer(MjViewerBasic):
         # toggle gripper
         elif key == glfw.KEY_N:
             self.gripper *= -1
+
+        # scaling factor on external force
+        elif key == glfw.KEY_G:
+            self.external_force += 1
+
+        elif key == glfw.KEY_B:
+            self.external_force -= 1
 
         super().key_callback(window, key, scancode, action, mods)
 
