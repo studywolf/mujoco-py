@@ -342,6 +342,8 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Toggle path vis", "[w]")
         self.add_overlay(const.GRID_TOPLEFT, "Increase gravity", "[g]")
         self.add_overlay(const.GRID_TOPLEFT, "Decrease gravity", "[b]")
+        self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass +1kg", "[u]")
+        self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass -1kg", "[y]")
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
