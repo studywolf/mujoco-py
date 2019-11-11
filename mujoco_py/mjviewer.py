@@ -368,7 +368,6 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
-        self.add_overlay(const.GRID_TOPRIGHT, "Gravity: %.2f" % (self.gravity[2] + self.gravity[2]*self.external_force), "")
 
     def key_callback(self, window, key, scancode, action, mods):
         # on button press (for button holding)
