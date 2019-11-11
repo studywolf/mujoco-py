@@ -192,6 +192,9 @@ class MjViewer(MjViewerBasic):
         # scaling factor on external force to apply to body
         self.external_force = 0
 
+        # additional mass for pick up object
+        self.additional_mass = 0
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -342,9 +345,10 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
-        self.add_overlay(const.GRID_TOPRIGHT, "Gravity Scaling: %i" % self.external_force, "")
+        self.add_overlay(const.GRID_TOPRIGHT, "Gravity: %.2f" % (-9.81 + -9.81*self.external_force), "")
 
     def key_callback(self, window, key, scancode, action, mods):
+        # on button press (for button holding)
         if action != glfw.RELEASE:
             # adjust object location up / down
             # X
@@ -365,6 +369,7 @@ class MjViewer(MjViewerBasic):
 
             super().key_callback(window, key, scancode, action, mods)
 
+        # on button release (click)
         else:
             if key == glfw.KEY_TAB:  # Switches cameras.
                 self.cam.fixedcamid += 1
@@ -493,6 +498,14 @@ class MjViewer(MjViewerBasic):
 
             elif key == glfw.KEY_B:
                 self.external_force -= 1
+
+            # scaling factor on external force
+            elif key == glfw.KEY_U:
+                self.additional_mass = 1
+
+            elif key == glfw.KEY_Y:
+                self.additional_mass = -1
+
 
             super().key_callback(window, key, scancode, action, mods)
 
