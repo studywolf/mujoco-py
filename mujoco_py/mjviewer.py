@@ -195,6 +195,21 @@ class MjViewer(MjViewerBasic):
         # additional mass for pick up object
         self.additional_mass = 0
 
+        # various gravities
+        self.gravities = {
+            'earth': np.array([0, 0, -9.81]),
+            'moon': np.array([0, 0, -1.62]),
+            'mars': np.array([0, 0, -3.71]),
+            'jupiter': np.array([0, 0, -24.92]),
+            'ISS': np.array([0, 0, 0]),
+            }
+        self.planet = 'earth'
+
+        # world gravity
+        self.gravity = self.gravities['earth']
+
+
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -344,10 +359,16 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Decrease gravity", "[b]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass +1kg", "[u]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass -1kg", "[y]")
+        self.add_overlay(const.GRID_TOPLEFT, "Earth Gravity", "[q]")
+        self.add_overlay(const.GRID_TOPLEFT, "Moon Gravity", "[i]")
+        self.add_overlay(const.GRID_TOPLEFT, "Mars Gravity", "[k]")
+        self.add_overlay(const.GRID_TOPLEFT, "Jupiter Gravity", "[,]")
+        self.add_overlay(const.GRID_TOPLEFT, "ISS Gravity", "[qj")
+
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
-        self.add_overlay(const.GRID_TOPRIGHT, "Gravity: %.2f" % (-9.81 + -9.81*self.external_force), "")
+        self.add_overlay(const.GRID_TOPRIGHT, "Gravity: %.2f" % (self.gravity[2] + self.gravity[2]*self.external_force), "")
 
     def key_callback(self, window, key, scancode, action, mods):
         # on button press (for button holding)
@@ -403,13 +424,13 @@ class MjViewer(MjViewerBasic):
                 img = self._read_pixels_as_in_window()
                 imageio.imwrite(self._image_path % self._image_idx, img)
                 self._image_idx += 1
-            elif key == glfw.KEY_I:  # drops in debugger.
-                try:
-                    import ipdb
-                    ipdb.set_trace()
-                    print('You can access the simulator by self.sim')
-                except ImportError:
-                    print('pip install ipdb to use debugger')
+            # elif key == glfw.KEY_I:  # drops in debugger.
+            #     try:
+            #         import ipdb
+            #         ipdb.set_trace()
+            #         print('You can access the simulator by self.sim')
+            #     except ImportError:
+            #         print('pip install ipdb to use debugger')
             elif key == glfw.KEY_S:  # Slows down simulation.
                 self._run_speed /= 2.0
             elif key == glfw.KEY_F:  # Speeds up simulation.
@@ -508,6 +529,21 @@ class MjViewer(MjViewerBasic):
             elif key == glfw.KEY_Y:
                 self.additional_mass = -1
 
+            # set the world gravity
+            elif key == glfw.KEY_Q:
+                self.planet = 'earth'
+
+            elif key == glfw.KEY_K:
+                self.planet = 'mars'
+
+            elif key == glfw.KEY_COMMA:
+                self.planet = 'jupiter'
+
+            elif key == glfw.KEY_I:
+                self.planet = 'moon'
+
+            elif key == glfw.KEY_J:
+                self.planet = 'ISS'
 
             super().key_callback(window, key, scancode, action, mods)
 
