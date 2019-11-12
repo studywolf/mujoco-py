@@ -321,20 +321,22 @@ class MjViewer(MjViewerBasic):
         if action != glfw.RELEASE:
             # adjust object location up / down
             # Z
-            if glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_UP:
-                self.target_z = 1
-            elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_DOWN:
-                self.target_z = -1
-            # X
-            if key == glfw.KEY_LEFT:
-                self.target_x = -1
-            elif key == glfw.KEY_RIGHT:
-                self.target_x = 1
-            # Y
-            if key == glfw.KEY_UP:
-                self.target_y = 1
-            elif key == glfw.KEY_DOWN:
-                self.target_y = -1
+            if glfw.get_key(window, glfw.KEY_LEFT_ALT):
+                if key == glfw.KEY_UP:
+                    self.target_z = 1
+                elif key == glfw.KEY_DOWN:
+                    self.target_z = -1
+            else:
+                # X
+                if key == glfw.KEY_LEFT:
+                    self.target_x = -1
+                elif key == glfw.KEY_RIGHT:
+                    self.target_x = 1
+                # Y
+                if key == glfw.KEY_UP:
+                    self.target_y = 1
+                elif key == glfw.KEY_DOWN:
+                    self.target_y = -1
 
             super().key_callback(window, key, scancode, action, mods)
 
