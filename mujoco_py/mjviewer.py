@@ -161,9 +161,6 @@ class MjViewer(MjViewerBasic):
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
 
-        # specify if the direction keys move the target or apply force to the elbow
-        self.move_elbow = False
-
         # allow for printing to top right from user side
         self.custom_print = ""
 
@@ -301,8 +298,6 @@ class MjViewer(MjViewerBasic):
 
         # CUSTOM KEYS
         self.add_overlay(const.GRID_TOPLEFT, "Toggle adaptation", "[LEFT SHIFT]")
-        text = "Switch to moving target" if self.move_elbow else "Switch to pushing elbow"
-        self.add_overlay(const.GRID_TOPLEFT, text, "ENTER")
         self.add_overlay(const.GRID_TOPLEFT, "Move target along X/Y", "RIGHT/LEFT/UP/DOWN")
         self.add_overlay(const.GRID_TOPLEFT, "Move target along Z", "[ALT+ UP/DOWN]")
         self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[F1]")
@@ -384,9 +379,6 @@ class MjViewer(MjViewerBasic):
                 self.reach_mode = 'drop_off'
             elif key == glfw.KEY_F4:
                 self.path_vis = not self.path_vis
-
-            elif key == glfw.KEY_ENTER:
-                self.move_elbow = not self.move_elbow
 
             # toggle adaptation
             elif key == glfw.KEY_LEFT_SHIFT:
