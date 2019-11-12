@@ -374,42 +374,37 @@ class MjViewer(MjViewerBasic):
                 self._paused = not self._paused
 
             # adjust object location up / down
+            # Z
+            elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_UP:
+                self.target_z = 1
+            elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_DOWN:
+                self.target_z = -1
             # X
-            elif key == glfw.KEY_O:
+            elif key == glfw.KEY_LEFT:
                 self.target_x = -1
-            elif key == glfw.KEY_P:
+            elif key == glfw.KEY_RIGHT:
                 self.target_x = 1
             # Y
-            elif key == glfw.KEY_L:
-                self.target_y = -1
-            elif key == glfw.KEY_SEMICOLON:
+            elif key == glfw.KEY_UP:
                 self.target_y = 1
-            # Z
-            elif key == glfw.KEY_PERIOD:
-                self.target_z = -1
-            elif key == glfw.KEY_SLASH:
-                self.target_z = 1
+            elif key == glfw.KEY_DOWN:
+                self.target_y = -1
 
             # user command to reach to target
-            elif key == glfw.KEY_A:
+            elif key == glfw.KEY_F1:
                 self.reach_mode = 'reach_target'
             # user command to pick up object
-            elif key == glfw.KEY_Z:
+            elif key == glfw.KEY_F2:
                 self.reach_mode = 'pick_up'
             # user command to drop off object
-            elif key == glfw.KEY_X:
+            elif key == glfw.KEY_F3:
                 self.reach_mode = 'drop_off'
-            elif key == glfw.KEY_W:
+            elif key == glfw.KEY_F4:
                 self.path_vis = not self.path_vis
 
             # toggle adaptation
             elif key == glfw.KEY_LEFT_SHIFT:
                 self.adapt = not self.adapt
-
-            # TODO: comment this out for demo
-            # toggle gripper
-            elif key == glfw.KEY_N:
-                self.gripper *= -1
 
             # scaling factor on external force
             elif key == glfw.KEY_G:
@@ -426,19 +421,19 @@ class MjViewer(MjViewerBasic):
                 self.additional_mass = -1
 
             # set the world gravity
-            elif key == glfw.KEY_Q:
-                self.planet = 'earth'
-
-            elif key == glfw.KEY_K:
+            elif key == glfw.KEY_1:
                 self.planet = 'mars'
 
-            elif key == glfw.KEY_COMMA:
-                self.planet = 'jupiter'
+            elif key == glfw.KEY_2:
+                self.planet = 'earth'
 
-            elif key == glfw.KEY_I:
+            elif key == glfw.KEY_3:
                 self.planet = 'moon'
 
-            elif key == glfw.KEY_J:
+            elif key == glfw.KEY_4:
+                self.planet = 'jupiter'
+
+            elif key == glfw.KEY_5:
                 self.planet = 'ISS'
 
             super().key_callback(window, key, scancode, action, mods)
