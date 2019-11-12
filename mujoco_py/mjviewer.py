@@ -108,22 +108,6 @@ class MjViewer(MjViewerBasic):
     """
     Extends :class:`.MjViewerBasic` to add video recording, interactive time and interaction controls.
 
-    The key bindings are as follows:
-
-    - TAB: Switch between MuJoCo cameras.
-    - H: Toggle hiding all GUI components.
-    - SPACE: Pause/unpause the simulation.
-    - RIGHT: Advance simulation by one step.
-    - V: Start/stop video recording.
-    - T: Capture screenshot.
-    - I: Drop into ``ipdb`` debugger.
-    - S/F: Decrease/Increase simulation playback speed.
-    - C: Toggle visualization of contact forces (off by default).
-    - D: Enable/disable frame skipping when rendering lags behind real time.
-    - R: Toggle transparency of geoms.
-    - M: Toggle display of mocap bodies.
-    - 0-4: Toggle display of geomgroups
-
     Parameters
     ----------
     sim : :class:`.MjSim`
@@ -176,6 +160,9 @@ class MjViewer(MjViewerBasic):
 
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
+
+        # specify if the direction keys move the target or apply force to the elbow
+        self.move_elbow = False
 
         # allow for printing to top right from user side
         self.custom_print = ""
@@ -314,25 +301,21 @@ class MjViewer(MjViewerBasic):
 
         # CUSTOM KEYS
         self.add_overlay(const.GRID_TOPLEFT, "Toggle adaptation", "[LEFT SHIFT]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target - X", "[o]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target + X", "[p]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target - Y", "[l]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target + Y", "[;]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target - Z", "[.]")
-        self.add_overlay(const.GRID_TOPLEFT, "Move target + Z", "[/]")
-        self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[a]")
-        self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[z]")
-        self.add_overlay(const.GRID_TOPLEFT, "Drop off up object", "[x]")
-        self.add_overlay(const.GRID_TOPLEFT, "Toggle path vis", "[w]")
+        text = "Switch to moving target" if self.move_elbow else "Switch to pushing elbow"
+        self.add_overlay(const.GRID_TOPLEFT, text, "ENTER")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target along X/Y", "RIGHT/LEFT/UP/DOWN")
+        self.add_overlay(const.GRID_TOPLEFT, "Move target along Z", "[ALT+ UP/DOWN]")
+        self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[F1]")
+        self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[F2]")
         self.add_overlay(const.GRID_TOPLEFT, "Increase gravity", "[g]")
         self.add_overlay(const.GRID_TOPLEFT, "Decrease gravity", "[b]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass +1kg", "[u]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass -1kg", "[y]")
-        self.add_overlay(const.GRID_TOPLEFT, "Earth Gravity", "[q]")
-        self.add_overlay(const.GRID_TOPLEFT, "Moon Gravity", "[i]")
-        self.add_overlay(const.GRID_TOPLEFT, "Mars Gravity", "[k]")
-        self.add_overlay(const.GRID_TOPLEFT, "Jupiter Gravity", "[,]")
-        self.add_overlay(const.GRID_TOPLEFT, "ISS Gravity", "[qj")
+        self.add_overlay(const.GRID_TOPLEFT, "Mars Gravity", "[1]")
+        self.add_overlay(const.GRID_TOPLEFT, "Earth Gravity", "[2]")
+        self.add_overlay(const.GRID_TOPLEFT, "Moon Gravity", "[3]")
+        self.add_overlay(const.GRID_TOPLEFT, "Jupiter Gravity", "[4]")
+        self.add_overlay(const.GRID_TOPLEFT, "ISS Gravity", "[5]")
 
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
@@ -401,6 +384,9 @@ class MjViewer(MjViewerBasic):
                 self.reach_mode = 'drop_off'
             elif key == glfw.KEY_F4:
                 self.path_vis = not self.path_vis
+
+            elif key == glfw.KEY_ENTER:
+                self.move_elbow = not self.move_elbow
 
             # toggle adaptation
             elif key == glfw.KEY_LEFT_SHIFT:
