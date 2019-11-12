@@ -42,6 +42,7 @@ class MjViewerBasic(cymj.MjRenderContextWindow):
         glfw.set_key_callback(self.window, self.key_callback)
 
         self.exit = False
+        self.restart = False
 
     def render(self):
         """
@@ -192,6 +193,7 @@ class MjViewer(MjViewerBasic):
         # world gravity
         self.gravity = self.gravities['earth']
 
+        self.restart_sim = False
 
 
     def render(self):
@@ -415,5 +417,8 @@ class MjViewer(MjViewerBasic):
 
             elif key == glfw.KEY_5:
                 self.planet = 'ISS'
+
+            elif key == glfw.KEY_F5:
+                self.restart_sim = True
 
             super().key_callback(window, key, scancode, action, mods)
