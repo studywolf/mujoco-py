@@ -159,6 +159,9 @@ class MjViewer(MjViewerBasic):
         # off, or reach to a target
         self.reach_mode = 'reach_target'
 
+        # sets whether we're in manual or auto mode
+        self.reach_type = None
+
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
 
@@ -420,5 +423,11 @@ class MjViewer(MjViewerBasic):
 
             elif key == glfw.KEY_F5:
                 self.restart_sim = True
+
+            elif key == glfw.KEY_ENTER:
+                if self.reach_type == 'auto':
+                    self.reach_type = 'manual'
+                elif self.reach_type == 'manual':
+                    self.reach_type = 'auto'
 
             super().key_callback(window, key, scancode, action, mods)
