@@ -151,9 +151,13 @@ class MjViewer(MjViewerBasic):
         # these variables are for changing the x,y,z location of an object
         # either 0 (no press), or +/-1 are returned, the scaling is up to the
         # user end
-        self.target_x = 0
-        self.target_y = 0
-        self.target_z = 0
+        self.target = np.zeros(3)
+        self.old_target = np.zeros(3)
+        self.scale = 0.05
+
+        self.xyz_lowerbound = [-0.5, -0.5, 0.0]
+        self.xyz_upperbound = [0.5, 0.5, 0.7]
+        self.rlim = [0.4, 1.0]
 
         # let the user define what the robot should do, pick up object, drop it
         # off, or reach to a target
@@ -197,6 +201,9 @@ class MjViewer(MjViewerBasic):
         self.gravity = self.gravities['earth']
 
         self.restart_sim = False
+        self.move_elbow = False
+        self.target_moved = False
+        self.elbow_force = np.zeros(6)
 
 
     def render(self):
@@ -282,8 +289,6 @@ class MjViewer(MjViewerBasic):
             else:
                 self.add_overlay(const.GRID_TOPLEFT, "Run speed = %.3f x real time" %
                                 self._run_speed, "[S]lower, [F]aster")
-            self.add_overlay(const.GRID_TOPLEFT, "Switch camera (#cams = %d)" % (self._ncam + 1),
-                                                "[Tab] (camera ID = %d)" % self.cam.fixedcamid)
             if self._paused is not None:
                 if not self._paused:
                     self.add_overlay(const.GRID_TOPLEFT, "Stop", "[Space]")
@@ -307,8 +312,6 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_TOPLEFT, "Move target along Z", "[ALT+ UP/DOWN]")
         self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[F1]")
         self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[F2]")
-        self.add_overlay(const.GRID_TOPLEFT, "Increase gravity", "[g]")
-        self.add_overlay(const.GRID_TOPLEFT, "Decrease gravity", "[b]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass +1kg", "[u]")
         self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass -1kg", "[y]")
         self.add_overlay(const.GRID_TOPLEFT, "Mars Gravity", "[1]")
@@ -319,41 +322,45 @@ class MjViewer(MjViewerBasic):
 
         self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: %s"%self.adapt, "")
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.reach_mode, "")
+        self.add_overlay(const.GRID_TOPRIGHT, "Elbow force ", ''.join('%.2f ' % val for val in self.elbow_force[:3]))
         self.add_overlay(const.GRID_TOPRIGHT, "%s"%self.custom_print, "")
 
     def key_callback(self, window, key, scancode, action, mods):
+        dx, dy, dz = 0, 0, 0
+        arrow_keys = False
+
         # on button press (for button holding)
         if action != glfw.RELEASE:
             # adjust object location up / down
             # Z
             if glfw.get_key(window, glfw.KEY_LEFT_ALT):
                 if key == glfw.KEY_UP:
-                    self.target_z = 1
+                    dz = 1
+                    arrow_keys = True
                 elif key == glfw.KEY_DOWN:
-                    self.target_z = -1
+                    dz = -1
+                    arrow_keys = True
             else:
                 # X
                 if key == glfw.KEY_LEFT:
-                    self.target_x = -1
+                    dx = -1
+                    arrow_keys = True
                 elif key == glfw.KEY_RIGHT:
-                    self.target_x = 1
+                    dx = 1
+                    arrow_keys = True
                 # Y
                 if key == glfw.KEY_UP:
-                    self.target_y = 1
+                    dy = 1
+                    arrow_keys = True
                 elif key == glfw.KEY_DOWN:
-                    self.target_y = -1
+                    dy = -1
+                    arrow_keys = True
 
             super().key_callback(window, key, scancode, action, mods)
 
         # on button release (click)
         else:
-            if key == glfw.KEY_TAB:  # Switches cameras.
-                self.cam.fixedcamid += 1
-                self.cam.type = const.CAMERA_FIXED
-                if self.cam.fixedcamid >= self._ncam:
-                    self.cam.fixedcamid = -1
-                    self.cam.type = const.CAMERA_FREE
-            elif key == glfw.KEY_H:  # hides all overlay.
+            if key == glfw.KEY_H:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
             elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
                 self._paused = not self._paused
@@ -361,19 +368,25 @@ class MjViewer(MjViewerBasic):
             # adjust object location up / down
             # Z
             elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_UP:
-                self.target_z = 1
+                dz = 1
+                arrow_keys = True
             elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_DOWN:
-                self.target_z = -1
+                dz = -1
+                arrow_keys = True
             # X
             elif key == glfw.KEY_LEFT:
-                self.target_x = -1
+                dx = -1
+                arrow_keys = True
             elif key == glfw.KEY_RIGHT:
-                self.target_x = 1
+                dx = 1
+                arrow_keys = True
             # Y
             elif key == glfw.KEY_UP:
-                self.target_y = 1
+                dy = 1
+                arrow_keys = True
             elif key == glfw.KEY_DOWN:
-                self.target_y = -1
+                dy = -1
+                arrow_keys = True
 
             # user command to reach to target
             elif key == glfw.KEY_F1:
@@ -430,4 +443,27 @@ class MjViewer(MjViewerBasic):
                 elif self.reach_type == 'manual':
                     self.reach_type = 'auto'
 
+            elif key == glfw.KEY_TAB:
+                self.move_elbow = not self.move_elbow
+
             super().key_callback(window, key, scancode, action, mods)
+
+        if arrow_keys:
+            if self.move_elbow:
+                self.elbow_force[:3] += np.array([dx, dy, dz])
+            else:
+                self.target += self.scale * np.array([dx, dy, dz])
+
+                # check that we're within radius thresholds, if set
+                if self.rlim[0] is not None:
+                    if np.linalg.norm(self.target) < self.rlim[0]:
+                        self.target = self.old_target
+
+                if self.rlim[1] is not None:
+                    if np.linalg.norm(self.target) > self.rlim[1]:
+                        self.target= self.old_target
+
+                self.target = np.clip(
+                    self.target, self.xyz_lowerbound, self.xyz_upperbound)
+
+                self.target_moved = True
