@@ -162,9 +162,10 @@ class MjViewer(MjViewerBasic):
         # let the user define what the robot should do, pick up object, drop it
         # off, or reach to a target
         self.reach_mode = 'reach_target'
+        self.reach_mode_changed = False
 
-        # sets whether we're in manual or auto mode
-        self.reach_type = None
+        # sets if we're in demo mode
+        self.toggle_demo = False
 
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
@@ -391,12 +392,15 @@ class MjViewer(MjViewerBasic):
             # user command to reach to target
             elif key == glfw.KEY_F1:
                 self.reach_mode = 'reach_target'
+                self.reach_mode_changed = True
             # user command to pick up object
             elif key == glfw.KEY_F2:
                 self.reach_mode = 'pick_up'
+                self.reach_mode_changed = True
             # user command to drop off object
             elif key == glfw.KEY_F3:
                 self.reach_mode = 'drop_off'
+                self.reach_mode_changed = True
             elif key == glfw.KEY_F4:
                 self.path_vis = not self.path_vis
 
@@ -438,10 +442,7 @@ class MjViewer(MjViewerBasic):
                 self.restart_sim = True
 
             elif key == glfw.KEY_ENTER:
-                if self.reach_type == 'auto':
-                    self.reach_type = 'manual'
-                elif self.reach_type == 'manual':
-                    self.reach_type = 'auto'
+                self.toggle_demo = True
 
             elif key == glfw.KEY_TAB:
                 self.move_elbow = not self.move_elbow
