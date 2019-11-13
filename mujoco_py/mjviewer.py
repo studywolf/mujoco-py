@@ -450,7 +450,7 @@ class MjViewer(MjViewerBasic):
 
         if arrow_keys:
             if self.move_elbow:
-                self.elbow_force[:3] += np.array([dx, dy, dz])
+                self.elbow_force[:3] += np.array([dx, dy, dz]) * 10
             else:
                 self.target += self.scale * np.array([dx, dy, dz])
 
