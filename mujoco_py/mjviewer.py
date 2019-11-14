@@ -207,6 +207,8 @@ class MjViewer(MjViewerBasic):
         self.target_moved = False
         self.elbow_force = np.zeros(6)
 
+        self.display_hotkeys = False
+
 
     def render(self):
         """
@@ -364,10 +366,14 @@ class MjViewer(MjViewerBasic):
         # on button release (click)
         else:
             self.key_pressed = True
+
             if key == glfw.KEY_H:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
-            elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
-                self._paused = not self._paused
+
+            # elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
+            #     self._paused = not self._paused
+            elif key == glfw.KEY_SPACE:
+                self.display_hotkeys = not self.display_hotkeys
 
             # adjust object location up / down
             # Z
