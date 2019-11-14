@@ -166,6 +166,7 @@ class MjViewer(MjViewerBasic):
 
         # sets if we're in demo mode
         self.toggle_demo = False
+        self.key_pressed = False
 
         # visualization of position and orientation of path planner / filter
         self.path_vis = False
@@ -332,7 +333,7 @@ class MjViewer(MjViewerBasic):
 
         # on button press (for button holding)
         if action != glfw.RELEASE:
-            self.reach_type = 'manual'
+            self.key_pressed = True
             # adjust object location up / down
             # Z
             if glfw.get_key(window, glfw.KEY_LEFT_ALT):
@@ -362,7 +363,7 @@ class MjViewer(MjViewerBasic):
 
         # on button release (click)
         else:
-            self.reach_type = 'manual'
+            self.key_pressed = True
             if key == glfw.KEY_H:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
             elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
