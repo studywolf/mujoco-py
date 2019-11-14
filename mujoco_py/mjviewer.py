@@ -155,7 +155,7 @@ class MjViewer(MjViewerBasic):
         self.old_target = np.zeros(3)
         self.scale = 0.05
 
-        self.xyz_lowerbound = [-0.5, -0.5, 0.0]
+        self.xyz_lowerbound = [-0.5, -0.5, 0.001]
         self.xyz_upperbound = [0.5, 0.5, 0.7]
         self.rlim = [0.4, 1.0]
 
@@ -462,6 +462,7 @@ class MjViewer(MjViewerBasic):
             if self.move_elbow:
                 self.elbow_force[:3] += np.array([dx, dy, dz]) * 10
             else:
+                self.old_target = np.copy(self.target)
                 self.target += self.scale * np.array([dx, dy, dz])
 
                 # check that we're within radius thresholds, if set
@@ -471,7 +472,7 @@ class MjViewer(MjViewerBasic):
 
                 if self.rlim[1] is not None:
                     if np.linalg.norm(self.target) > self.rlim[1]:
-                        self.target= self.old_target
+                        self.target = self.old_target
 
                 self.target = np.clip(
                     self.target, self.xyz_lowerbound, self.xyz_upperbound)
