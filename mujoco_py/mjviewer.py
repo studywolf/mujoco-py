@@ -332,6 +332,7 @@ class MjViewer(MjViewerBasic):
 
         # on button press (for button holding)
         if action != glfw.RELEASE:
+            self.reach_type = 'manual'
             # adjust object location up / down
             # Z
             if glfw.get_key(window, glfw.KEY_LEFT_ALT):
@@ -361,6 +362,7 @@ class MjViewer(MjViewerBasic):
 
         # on button release (click)
         else:
+            self.reach_type = 'manual'
             if key == glfw.KEY_H:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
             elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
