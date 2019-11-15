@@ -187,7 +187,8 @@ class MjViewer(MjViewerBasic):
         self.external_force = 0
 
         # additional mass for pick up object
-        self.additional_mass = 0
+        # self.additional_mass = 0
+        self.dumbbell_mass_index = 0
 
         # various gravities
         self.gravities = {
@@ -259,8 +260,6 @@ class MjViewer(MjViewerBasic):
 
             'adapt': glfw.KEY_LEFT_SHIFT,
             'move_elbow': glfw.KEY_TAB,
-            'force_up': glfw.KEY_G,
-            'force_down': glfw.KEY_B,
             'mass_up': glfw.KEY_U,
             'mass_down': glfw.KEY_Y,
             }
@@ -435,37 +434,41 @@ class MjViewer(MjViewerBasic):
 
         # on button press (for button holding)
         if action != glfw.RELEASE:
-            self.key_pressed = True
             # adjust object location up / down
             # Z
             if glfw.get_key(window, self.keys['z_toggle']) or self.target_z_toggle:
                 if key == self.keys['forward']:
                     dz = 1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
                 elif key == self.keys['backward']:
                     dz = -1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
             else:
                 # X
                 if key == self.keys['left']:
                     dx = -1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
                 elif key == self.keys['right']:
                     dx = 1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
                 # Y
                 if key == self.keys['forward']:
                     dy = 1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
                 elif key == self.keys['backward']:
                     dy = -1 * self.joystick_scale
                     arrow_keys = True
+                    self.key_pressed = True
 
             super().key_callback(window, key, scancode, action, mods)
 
         # on button release (click)
         elif action == glfw.RELEASE:
-            self.key_pressed = True
 
             if key == self.keys['hide_overlay']:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
@@ -479,58 +482,71 @@ class MjViewer(MjViewerBasic):
                   and key == self.keys['forward']):
                 dz = 1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
             elif ((glfw.get_key(window, self.keys['z_toggle']) )#or self.target_z_toggle)
                   and key == self.keys['backward']):
                 dz = -1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
             # X
             elif key == self.keys['left']:
                 dx = -1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
             elif key == self.keys['right']:
                 dx = 1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
             # Y
             elif key == self.keys['forward']:
                 dy = 1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
             elif key == self.keys['backward']:
                 dy = -1 * self.joystick_scale
                 arrow_keys = True
+                self.key_pressed = True
 
             # user command to reach to target
             elif key == self.keys['reach_target']:
                 self.reach_mode = 'reach_target'
                 self.reach_mode_changed = True
+                self.key_pressed = True
             # user command to pick up object
             elif key == self.keys['pick_up']:
                 self.reach_mode = 'pick_up'
                 self.reach_mode_changed = True
+                self.key_pressed = True
             # user command to drop off object
             elif key == self.keys['drop_off']:
                 self.reach_mode = 'drop_off'
                 self.reach_mode_changed = True
-            elif key == self.keys['path_vis']:
-                self.path_vis = not self.path_vis
+                self.key_pressed = True
+            # elif key == self.keys['path_vis']:
+            #     self.path_vis = not self.path_vis
 
             # toggle adaptation
             elif key == self.keys['adapt']:
                 self.adapt = not self.adapt
+                self.key_pressed = True
 
-            # scaling factor on external force
-            elif key == self.keys['force_up']:
-                self.external_force += 1
-
-            elif key == self.keys['force_down']:
-                self.external_force -= 1
+            # # scaling factor on external force
+            # elif key == self.keys['force_up']:
+            #     self.external_force += 1
+            #
+            # elif key == self.keys['force_down']:
+            #     self.external_force -= 1
 
             # scaling factor on external force
             elif key == self.keys['mass_up']:
                 print('so masseus')
-                self.additional_mass = 1
+                # self.additional_mass = 1
+                self.dumbbell_mass_index += 1
 
             elif key == self.keys['mass_down']:
-                self.additional_mass = -1
+                print('no masseus')
+                # self.additional_mass = -1
+                self.dumbbell_mass_index -= 1
 
             # set the world gravity
             elif key == self.keys['mars']:
@@ -553,6 +569,7 @@ class MjViewer(MjViewerBasic):
 
             elif key == self.keys['demo_toggle']:
                 self.toggle_demo = True
+                self.key_pressed = True
 
             elif key == self.keys['move_elbow']:
                 self.move_elbow = not self.move_elbow
