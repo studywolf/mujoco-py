@@ -539,12 +539,10 @@ class MjViewer(MjViewerBasic):
 
             # scaling factor on external force
             elif key == self.keys['mass_up']:
-                print('so masseus')
                 # self.additional_mass = 1
                 self.dumbbell_mass_index += 1
 
             elif key == self.keys['mass_down']:
-                print('no masseus')
                 # self.additional_mass = -1
                 self.dumbbell_mass_index -= 1
 
@@ -574,7 +572,6 @@ class MjViewer(MjViewerBasic):
             elif key == self.keys['move_elbow']:
                 self.move_elbow = not self.move_elbow
 
-            print('called back!!')
 
             super().key_callback(window, key, scancode, action, mods)
 
@@ -619,8 +616,6 @@ class MjViewer(MjViewerBasic):
         action = None
 
         button = self.id2xbox[self.xboxContId]
-        print('\n', button)
-        print(self.xbox_val)
         # thumbsticks
         if 'rthumb' in button:
             # top right quadrant
@@ -707,7 +702,6 @@ class MjViewer(MjViewerBasic):
         # dpad
         elif button == 'dpad':
             if self.xbox_val[1] == 1:
-                print('mass up')
                 key = self.keys['mass_up']
                 action = glfw.RELEASE
             elif self.xbox_val[1] == -1:
@@ -736,9 +730,7 @@ class MjViewer(MjViewerBasic):
             self.xboxCont._start()
             if self.xboxContId is not None:
                 key, action = self.xbox_conversion()
-                print('received: ', key)
                 if key is not None and action is not None:
-                    print('running callback')
                     self.key_callback(window=self.window, key=key, scancode=None, action=action, mods=None)
             # only reset when not thumbstick
             # if (self.xboxContId != 0
