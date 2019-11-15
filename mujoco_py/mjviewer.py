@@ -8,7 +8,7 @@ from multiprocessing import Process, Queue
 from mujoco_py.utils import rec_copy, rec_assign
 import numpy as np
 import imageio
-
+from mujoco_py.xbox_controller import XboxController
 
 class MjViewerBasic(cymj.MjRenderContextWindow):
     """
@@ -197,7 +197,14 @@ class MjViewer(MjViewerBasic):
             'jupiter': np.array([0, 0, -24.92]),
             'ISS': np.array([0, 0, 0]),
             }
+        # ids for cycling through planets with arrow keys
+        self.planet_names = {
+            0: 'mars', 1: 'earth', 2: 'moon', 3: 'jupiter', 4: 'ISS'}
+        self.planet_ids = {
+            'mars': 0, 'earth': 1, 'moon': 2, 'jupiter': 3, 'ISS': 4}
+
         self.planet = 'earth'
+        self.planet_id = self.planet_ids[self.planet]
 
         # world gravity
         self.gravity = self.gravities['earth']
@@ -208,6 +215,99 @@ class MjViewer(MjViewerBasic):
         self.elbow_force = np.zeros(6)
 
         self.display_hotkeys = False
+
+
+        # xbox controller params
+        self.use_controller = False
+        # mapping between keyboard keys and xbox controller
+        self.kb_xbox_mapping = {}
+        self.xboxContId = None
+        self.xbox_val = None
+        # scaling for target step movement, when using jostick this value will drop
+        self.joystick_scale = 1
+        # with the xbox controller, use R and L triggers to switch to controlling
+        # target and elbow (respectively) z direction with joystick
+        # hitting trigger toggles between controlling z and xy
+        self.target_z_toggle = False
+        self.elbox_z_toggle = False
+
+        # mapping glfw to command
+        self.keys = {
+            'mars': glfw.KEY_1,
+            'earth': glfw.KEY_2,
+            'moon': glfw.KEY_3,
+            'jupiter': glfw.KEY_4,
+            'ISS': glfw.KEY_5,
+
+            'left': glfw.KEY_LEFT,
+            'right': glfw.KEY_RIGHT,
+            'forward': glfw.KEY_UP,
+            'backward': glfw.KEY_DOWN,
+            'z_toggle': glfw.KEY_LEFT_ALT,
+
+            'hot_keys': glfw.KEY_SPACE,
+            'exit': glfw.KEY_ESCAPE,
+            'hide_overlay': glfw.KEY_H,
+            'restart': glfw.KEY_F5,
+            'demo_toggle': glfw.KEY_ENTER,
+
+            'reach_target': glfw.KEY_F1,
+            'pick_up': glfw.KEY_F2,
+            'drop_off': glfw.KEY_F3,
+
+            'path_vis': glfw.KEY_F4,
+
+            'adapt': glfw.KEY_LEFT_SHIFT,
+            'move_elbow': glfw.KEY_TAB,
+            'force_up': glfw.KEY_G,
+            'force_down': glfw.KEY_B,
+            'mass_up': glfw.KEY_U,
+            'mass_down': glfw.KEY_Y,
+            }
+
+        # mapping xbox id to key
+        self.id2xbox = {
+            0: 'lthumbx',
+            1: 'lthumby',
+            2: 'ltrigger',
+            3: 'rthumbx',
+            4: 'rthumby',
+            5: 'rtrigger',
+            6: 'A',
+            7: 'B',
+            8: 'X',
+            9: 'Y',
+            10: 'LB',
+            11: 'RB',
+            12: 'back',
+            13: 'start',
+            14: 'xbox',
+            15: 'lthumb',
+            16: 'rthumb',
+            17: 'dpad'
+            }
+
+        # mapping xbox key to action
+        self.buttons_to_glfw = {
+            # 'lthumbx',
+            # 'lthumby',
+            # 'rthumbx',
+            # 'rthumby',
+            # 'rtrigger': glfw.KEY_,
+            # 'ltrigger': glfw.KEY_,
+            'A': None,
+            'B': self.keys['restart'],
+            'X': self.keys['move_elbow'],
+            'Y': self.keys['demo_toggle'],
+            'LB': self.keys['pick_up'],
+            'RB': self.keys['reach_target'],
+            'back': self.keys['exit'],
+            'start': self.keys['hot_keys'],
+            'xbox': self.keys['adapt'],
+            # 'lthumb': glfw.KEY_,
+            # 'rthumb': glfw.KEY_,
+            # 'dpad'
+            }
 
 
     def render(self):
@@ -338,123 +438,126 @@ class MjViewer(MjViewerBasic):
             self.key_pressed = True
             # adjust object location up / down
             # Z
-            if glfw.get_key(window, glfw.KEY_LEFT_ALT):
-                if key == glfw.KEY_UP:
-                    dz = 1
+            if glfw.get_key(window, self.keys['z_toggle']) or self.target_z_toggle:
+                if key == self.keys['forward']:
+                    dz = 1 * self.joystick_scale
                     arrow_keys = True
-                elif key == glfw.KEY_DOWN:
-                    dz = -1
+                elif key == self.keys['backward']:
+                    dz = -1 * self.joystick_scale
                     arrow_keys = True
             else:
                 # X
-                if key == glfw.KEY_LEFT:
-                    dx = -1
+                if key == self.keys['left']:
+                    dx = -1 * self.joystick_scale
                     arrow_keys = True
-                elif key == glfw.KEY_RIGHT:
-                    dx = 1
+                elif key == self.keys['right']:
+                    dx = 1 * self.joystick_scale
                     arrow_keys = True
                 # Y
-                if key == glfw.KEY_UP:
-                    dy = 1
+                if key == self.keys['forward']:
+                    dy = 1 * self.joystick_scale
                     arrow_keys = True
-                elif key == glfw.KEY_DOWN:
-                    dy = -1
+                elif key == self.keys['backward']:
+                    dy = -1 * self.joystick_scale
                     arrow_keys = True
 
             super().key_callback(window, key, scancode, action, mods)
 
         # on button release (click)
-        else:
+        elif action == glfw.RELEASE:
             self.key_pressed = True
 
-            if key == glfw.KEY_H:  # hides all overlay.
+            if key == self.keys['hide_overlay']:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
-
-            # elif key == glfw.KEY_SPACE and self._paused is not None:  # stops simulation.
-            #     self._paused = not self._paused
-            elif key == glfw.KEY_SPACE:
+            elif key == self.keys['hot_keys'] # and self._paused is not None:  # stops simulation.
+                # self._paused = not self._paused
                 self.display_hotkeys = not self.display_hotkeys
 
             # adjust object location up / down
             # Z
-            elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_UP:
-                dz = 1
+            elif ((glfw.get_key(window, self.keys['z_toggle']) )#or self.target.z_toggle)
+                  and key == self.keys['forward']):
+                dz = 1 * self.joystick_scale
                 arrow_keys = True
-            elif glfw.get_key(window, glfw.KEY_LEFT_ALT) and key == glfw.KEY_DOWN:
-                dz = -1
+            elif ((glfw.get_key(window, self.keys['z_toggle']) )#or self.target_z_toggle)
+                  and key == self.keys['backward']):
+                dz = -1 * self.joystick_scale
                 arrow_keys = True
             # X
-            elif key == glfw.KEY_LEFT:
-                dx = -1
+            elif key == self.keys['left']:
+                dx = -1 * self.joystick_scale
                 arrow_keys = True
-            elif key == glfw.KEY_RIGHT:
-                dx = 1
+            elif key == self.keys['right']:
+                dx = 1 * self.joystick_scale
                 arrow_keys = True
             # Y
-            elif key == glfw.KEY_UP:
-                dy = 1
+            elif key == self.keys['forward']:
+                dy = 1 * self.joystick_scale
                 arrow_keys = True
-            elif key == glfw.KEY_DOWN:
-                dy = -1
+            elif key == self.keys['backward']:
+                dy = -1 * self.joystick_scale
                 arrow_keys = True
 
             # user command to reach to target
-            elif key == glfw.KEY_F1:
+            elif key == self.keys['reach_target']:
                 self.reach_mode = 'reach_target'
                 self.reach_mode_changed = True
             # user command to pick up object
-            elif key == glfw.KEY_F2:
+            elif key == self.keys['pick_up']:
                 self.reach_mode = 'pick_up'
                 self.reach_mode_changed = True
             # user command to drop off object
-            elif key == glfw.KEY_F3:
+            elif key == self.keys['drop_off']:
                 self.reach_mode = 'drop_off'
                 self.reach_mode_changed = True
-            elif key == glfw.KEY_F4:
+            elif key == self.keys['path_vis']:
                 self.path_vis = not self.path_vis
 
             # toggle adaptation
-            elif key == glfw.KEY_LEFT_SHIFT:
+            elif key == self.keys['adapt']:
                 self.adapt = not self.adapt
 
             # scaling factor on external force
-            elif key == glfw.KEY_G:
+            elif key == self.keys['force_up']:
                 self.external_force += 1
 
-            elif key == glfw.KEY_B:
+            elif key == self.keys['force_down']:
                 self.external_force -= 1
 
             # scaling factor on external force
-            elif key == glfw.KEY_U:
+            elif key == self.keys['mass_up']:
+                print('so masseus')
                 self.additional_mass = 1
 
-            elif key == glfw.KEY_Y:
+            elif key == self.keys['mass_down']:
                 self.additional_mass = -1
 
             # set the world gravity
-            elif key == glfw.KEY_1:
+            elif key == self.keys['mars']:
                 self.planet = 'mars'
 
-            elif key == glfw.KEY_2:
+            elif key == self.keys['earth']:
                 self.planet = 'earth'
 
-            elif key == glfw.KEY_3:
+            elif key == self.keys['moon']:
                 self.planet = 'moon'
 
-            elif key == glfw.KEY_4:
+            elif key == self.keys['jupiter']:
                 self.planet = 'jupiter'
 
-            elif key == glfw.KEY_5:
+            elif key == self.keys['ISS']:
                 self.planet = 'ISS'
 
-            elif key == glfw.KEY_F5:
+            elif key == self.keys['restart']:
                 self.restart_sim = True
 
-            elif key == glfw.KEY_ENTER:
+            elif key == self.keys['demo_toggle']:
                 self.toggle_demo = True
 
-            elif key == glfw.KEY_TAB:
+            elif key == self.keys['move_elbow']:
                 self.move_elbow = not self.move_elbow
+
+            print('called back!!')
 
             super().key_callback(window, key, scancode, action, mods)
 
@@ -478,3 +581,153 @@ class MjViewer(MjViewerBasic):
                     self.target, self.xyz_lowerbound, self.xyz_upperbound)
 
                 self.target_moved = True
+
+    def xbox_vals(self, xboxControlId=None, value=None):
+        self.xboxContId = xboxControlId
+        self.xbox_val = value
+
+
+    def setup_xbox_controller(self, deadzone=75, scale=100):
+        self.deadzone = deadzone
+        #setup xbox controller, set out the deadzone and scale, also invert the Y Axis (for some reason in Pygame negative is up - wierd!
+        self.xboxCont = XboxController(
+            self.xbox_vals, deadzone=self.deadzone, scale=scale, invertYAxis=True)
+        self.use_controller = True
+        self.joystick_scale = 0.1
+
+
+    def xbox_conversion(self):
+
+        key = None
+        action = None
+
+        button = self.id2xbox[self.xboxContId]
+        print('\n', button)
+        print(self.xbox_val)
+        # thumbsticks
+        if 'rthumb' in button:
+            # top right quadrant
+            if sum(abs(self.xbox_val)) > 10:
+                if self.xbox_val[0] >= 0 and self.xbox_val[1] >= 0:
+                    if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+                        key = self.keys['right']
+                    else:
+                        key = self.keys['forward']
+
+                # top left quadrant
+                elif self.xbox_val[0] < 0 and self.xbox_val[1] >= 0:
+                    if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+                        key = self.keys['left']
+                    else:
+                        key = self.keys['forward']
+
+                # bottom left quadrant
+                elif self.xbox_val[0] < 0 and self.xbox_val[1] < 0:
+                    if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+                        key = self.keys['left']
+                    else:
+                        key = self.keys['backward']
+
+                # bottom right quadrant
+                elif self.xbox_val[0] >= 0 and self.xbox_val[1] < 0:
+                    if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+                        key = self.keys['right']
+                    else:
+                        key = self.keys['backward']
+
+                action = 1
+
+        #TODO: this needs to be mapped to other keys so we can control the elbow
+        # you'll need to add the commands to self.keys and reference them here,
+        # you'll also need to add the commands to the callback above
+        # the a and x keys are still available, it might be easiest to use x to
+        # toggle move elbow
+
+        elif 'lthumb' in button:
+            pass
+        # if 'lthumb' in button:
+        #     # top right quadrant
+        #     if self.xbox_val[0] >= 0 and self.xbox_val[1] >= 0:
+        #         if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+        #             key = self.keys['right']
+        #         else:
+        #             key = self.keys['forward']
+        #
+        #     # top left quadrant
+        #     elif self.xbox_val[0] < 0 and self.xbox_val[1] >= 0:
+        #         if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+        #             key = self.keys['left']
+        #         else:
+        #             key = self.keys['forward']
+        #
+        #     # bottom left quadrant
+        #     elif self.xbox_val[0] < 0 and self.xbox_val[1] < 0:
+        #         if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+        #             key = self.keys['left']
+        #         else:
+        #             key = self.keys['backward']
+        #
+        #     # bottom right quadrant
+        #     elif self.xbox_val[0] >= 0 and self.xbox_val[1] < 0:
+        #         if abs(self.xbox_val[0]) > abs(self.xbox_val[1]):
+        #             key = self.keys['right']
+        #         else:
+        #             key = self.keys['backward']
+        #
+        #     action = 1
+
+        # triggers
+        elif button == 'rtrigger':
+            if self.xbox_val > 95:
+                self.target_z_toggle = not self.target_z_toggle
+                key = None
+                action = None
+
+        elif button == 'ltrigger':
+            key=None
+            action=None
+
+        # dpad
+        elif button == 'dpad':
+            if self.xbox_val[1] == 1:
+                print('mass up')
+                key = self.keys['mass_up']
+                action = glfw.RELEASE
+            elif self.xbox_val[1] == -1:
+                key = self.keys['mass_down']
+                action = glfw.RELEASE
+            elif self.xbox_val[0] == -1:
+                key = self.keys[
+                    self.planet_names[max(0, (self.planet_ids[self.planet]-1))]]
+                action = glfw.RELEASE
+            elif self.xbox_val[0] == 1:
+                key = self.keys[
+                    self.planet_names[min(4, (self.planet_ids[self.planet]+1))]]
+                action = glfw.RELEASE
+
+        # buttons
+        else:
+            key = self.buttons_to_glfw[button]
+            action = self.xbox_val
+
+        return key, action
+
+
+    def xbox_callback(self):
+        # check for keypress
+        if self.use_controller:
+            self.xboxCont._start()
+            if self.xboxContId is not None:
+                key, action = self.xbox_conversion()
+                print('received: ', key)
+                if key is not None and action is not None:
+                    print('running callback')
+                    self.key_callback(window=self.window, key=key, scancode=None, action=action, mods=None)
+            # only reset when not thumbstick
+            # if (self.xboxContId != 0
+            #         or self.xboxContId != 1
+            #         or self.xboxContId != 3
+            #         or self.xboxContId != 4):
+            self.xboxContId = None
+            self.xbox_val = None
+
