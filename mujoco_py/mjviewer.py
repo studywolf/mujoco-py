@@ -469,7 +469,7 @@ class MjViewer(MjViewerBasic):
 
             if key == self.keys['hide_overlay']:  # hides all overlay.
                 self._hide_overlay = not self._hide_overlay
-            elif key == self.keys['hot_keys'] # and self._paused is not None:  # stops simulation.
+            elif key == self.keys['hot_keys']: # and self._paused is not None:  # stops simulation.
                 # self._paused = not self._paused
                 self.display_hotkeys = not self.display_hotkeys
 
