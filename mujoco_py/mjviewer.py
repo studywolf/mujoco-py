@@ -200,9 +200,9 @@ class MjViewer(MjViewerBasic):
             }
         # ids for cycling through planets with arrow keys
         self.planet_names = {
-            0: 'mars', 1: 'earth', 2: 'moon', 3: 'jupiter', 4: 'ISS'}
+                0: 'mars', 1: 'earth', 2: 'ISS', 3: 'moon', 4: 'jupiter'}
         self.planet_ids = {
-            'mars': 0, 'earth': 1, 'moon': 2, 'jupiter': 3, 'ISS': 4}
+                'mars': 0, 'earth': 1, 'ISS': 2, 'moon': 3, 'jupiter': 4}
 
         self.planet = 'earth'
         self.planet_id = self.planet_ids[self.planet]
@@ -239,6 +239,8 @@ class MjViewer(MjViewerBasic):
             'moon': glfw.KEY_3,
             'jupiter': glfw.KEY_4,
             'ISS': glfw.KEY_5,
+            'planet_right': glfw.KEY_D,
+            'planet_left': glfw.KEY_A,
 
             'left': glfw.KEY_LEFT,
             'right': glfw.KEY_RIGHT,
@@ -571,20 +573,29 @@ class MjViewer(MjViewerBasic):
                 self.dumbbell_mass_index -= 1
 
             # set the world gravity
-            elif key == self.keys['mars']:
-                self.planet = 'mars'
+            # elif key == self.keys['mars']:
+            #     self.planet = 'mars'
+            #
+            # elif key == self.keys['earth']:
+            #     self.planet = 'earth'
+            #
+            # elif key == self.keys['moon']:
+            #     self.planet = 'moon'
+            #
+            # elif key == self.keys['jupiter']:
+            #     self.planet = 'jupiter'
+            #
+            # elif key == self.keys['ISS']:
+            #     self.planet = 'ISS'
 
-            elif key == self.keys['earth']:
-                self.planet = 'earth'
+            elif key == self.keys['planet_left']:
+                self.planet = (
+                    self.planet_names[(self.planet_ids[self.planet] - 1) % len(self.planet_names)])
 
-            elif key == self.keys['moon']:
-                self.planet = 'moon'
+            elif key == self.keys['planet_right']:
+                self.planet = (
+                    self.planet_names[(self.planet_ids[self.planet] + 1) % len(self.planet_names)])
 
-            elif key == self.keys['jupiter']:
-                self.planet = 'jupiter'
-
-            elif key == self.keys['ISS']:
-                self.planet = 'ISS'
 
             elif key == self.keys['restart']:
                 self.restart_sim = True
@@ -732,12 +743,14 @@ class MjViewer(MjViewerBasic):
                 key = self.keys['mass_down']
                 action = glfw.RELEASE
             elif self.xbox_val[0] == -1:
-                key = self.keys[
-                    self.planet_names[max(0, (self.planet_ids[self.planet]-1))]]
+                # key = self.keys[
+                #     self.planet_names[max(0, (self.planet_ids[self.planet]-1))]]
+                key = self.keys['planet_left']
                 action = glfw.RELEASE
             elif self.xbox_val[0] == 1:
-                key = self.keys[
-                    self.planet_names[min(4, (self.planet_ids[self.planet]+1))]]
+                key = self.keys['planet_right']
+                # key = self.keys[
+                #     self.planet_names[min(4, (self.planet_ids[self.planet]+1))]]
                 action = glfw.RELEASE
 
         # buttons
