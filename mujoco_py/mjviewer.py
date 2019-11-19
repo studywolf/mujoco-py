@@ -262,8 +262,8 @@ class MjViewer(MjViewerBasic):
 
             'adapt': glfw.KEY_LEFT_SHIFT,
             'move_elbow': glfw.KEY_TAB,
-            'mass_up': glfw.KEY_U,
-            'mass_down': glfw.KEY_Y,
+            'mass_up': glfw.KEY_W,
+            'mass_down': glfw.KEY_S,
             }
 
         # mapping xbox id to key
@@ -418,9 +418,10 @@ class MjViewer(MjViewerBasic):
             self.add_overlay(const.GRID_TOPLEFT, "Move target along Z", "[ALT+ UP/DOWN]")
             self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[F1]")
             self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[F2]")
-            self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass up", "[u]")
-            self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass down", "[y]")
+            # self.add_overlay(const.GRID_TOPLEFT, "Drop off object", "[F3]")
+            # self.add_overlay(const.GRID_TOPLEFT, "Visualize Path", "[F4]")
             self.add_overlay(const.GRID_TOPLEFT, "Toggle elbow control", "[Tab]")
+            self.add_overlay(const.GRID_TOPLEFT, "Cycle dumbbell mass", "[w/s]")
             self.add_overlay(const.GRID_TOPLEFT, "Cycle planetary gravity", "[a/d]")
             self.add_overlay(const.GRID_TOPLEFT, "Start Demo", "[Enter]")
             self.add_overlay(const.GRID_TOPLEFT, "Restart", "[F5]")
@@ -437,8 +438,7 @@ class MjViewer(MjViewerBasic):
             self.add_overlay(const.GRID_TOPLEFT, "Toggle elbow control", "[X]")
             self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[R Bumper]")
             self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[L Bumper]")
-            self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass up", "[Dpad Up]")
-            self.add_overlay(const.GRID_TOPLEFT, "Dumbbell mass down", "[Dpad Down]")
+            self.add_overlay(const.GRID_TOPLEFT, "Cycle dumbbell mass", "[Dpad Up/Down]")
             self.add_overlay(const.GRID_TOPLEFT, "Cycle planetary gravity", "[Dpad Left/Right]")
 
             self.add_overlay(const.GRID_TOPLEFT, "Start Demo", "[Y]")
