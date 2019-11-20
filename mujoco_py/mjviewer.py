@@ -296,12 +296,12 @@ class MjViewer(MjViewerBasic):
             # 'rthumby',
             # 'rtrigger': glfw.KEY_,
             # 'ltrigger': glfw.KEY_,
-            'A': None,
+            'A': self.keys['reach_target'],
             'B': self.keys['restart'],
             'X': self.keys['move_elbow'],
             'Y': self.keys['demo_toggle'],
             'LB': self.keys['pick_up'],
-            'RB': self.keys['reach_target'],
+            'RB': self.keys['drop_off'],
             'back': self.keys['exit'],
             'start': self.keys['hot_keys'],
             'xbox': self.keys['adapt'],
@@ -436,8 +436,9 @@ class MjViewer(MjViewerBasic):
             self.add_overlay(const.GRID_TOPLEFT, "Move target along X/Y", "[R Thumbstick]")
             self.add_overlay(const.GRID_TOPLEFT, "Toggle Z control", "[R Trigger]")
             self.add_overlay(const.GRID_TOPLEFT, "Toggle elbow control", "[X]")
-            self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[R Bumper]")
+            self.add_overlay(const.GRID_TOPLEFT, "Follow target", "[A]")
             self.add_overlay(const.GRID_TOPLEFT, "Pick up object", "[L Bumper]")
+            self.add_overlay(const.GRID_TOPLEFT, "Drop off object", "[R Bumper]")
             self.add_overlay(const.GRID_TOPLEFT, "Cycle dumbbell mass", "[Dpad Up/Down]")
             self.add_overlay(const.GRID_TOPLEFT, "Cycle planetary gravity", "[Dpad Left/Right]")
 
