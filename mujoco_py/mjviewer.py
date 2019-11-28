@@ -167,6 +167,8 @@ class MjViewer(MjViewerBasic):
         self._hide_overlay = False  # hide the entire overlay.
         self._user_overlay = {}
 
+        self.adapt = False
+
     def render(self):
         """
         Render the current simulation state to the screen or off-screen buffer.
@@ -299,6 +301,8 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_BOTTOMRIGHT, "n_substeps", str(self.sim.nsubsteps))
         self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
 
+        self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: ", "True" if self.adapt else "False")
+
     def key_callback(self, window, key, scancode, action, mods):
         if action != glfw.RELEASE:
             return
@@ -380,6 +384,8 @@ class MjViewer(MjViewerBasic):
             keynum = key - 290
             vopt = self.vopt
             vopt.flags[keynum] = vopt.flags[keynum] = not vopt.flags[keynum]
+        elif key == glfw.KEY_LEFT_SHIFT:
+            self.adapt = not self.adapt
         super().key_callback(window, key, scancode, action, mods)
 
         print(glfw.get_key(window, glfw.KEY_LEFT_CONTROL))
