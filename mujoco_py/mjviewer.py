@@ -301,7 +301,7 @@ class MjViewer(MjViewerBasic):
         self.add_overlay(const.GRID_BOTTOMRIGHT, "n_substeps", str(self.sim.nsubsteps))
         self.add_overlay(const.GRID_TOPLEFT, "Toggle geomgroup visibility", "0-4")
 
-        self.add_overlay(const.GRID_TOPRIGHT, "Adaptation: ", "True" if self.adapt else "False")
+        self.add_overlay(const.GRID_TOPLEFT, "Adaptation: ", "True" if self.adapt else "False")
 
     def key_callback(self, window, key, scancode, action, mods):
         if action != glfw.RELEASE:
@@ -387,8 +387,6 @@ class MjViewer(MjViewerBasic):
         elif key == glfw.KEY_LEFT_SHIFT:
             self.adapt = not self.adapt
         super().key_callback(window, key, scancode, action, mods)
-
-        print(glfw.get_key(window, glfw.KEY_LEFT_CONTROL))
 
 # Separate Process to save video. This way visualization is
 # less slowed down.
